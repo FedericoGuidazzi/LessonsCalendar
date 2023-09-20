@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Calendario UniTo</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+
+            .calendar {
+                width: 90%; /* Utilizza percentuali per la larghezza */
+                margin: 0 auto;
+                text-align: center;
+                padding: 10px;
+            }
+
+            /* Stili per schermi più piccoli */
+            @media (max-width: 768px) {
+                .calendar {
+                    width: 100%; /* Riduci la larghezza per schermi più piccoli */
+                }
+            }
+
+            /* Stili per schermi ancora più piccoli (ad esempio, dispositivi mobili) */
+            @media (max-width: 480px) {
+                .calendar {
+                    width: 100%; /* Larghezza al 100% per schermi molto piccoli */
+                }
+            }
+            /* Stile per la tabella per dispositivi mobili */
+            @media (max-width: 767px) {
+                #calendarTable {
+                    width: 100%; /* Imposta la larghezza al 100% per adattarsi allo schermo */
+                    font-size: 12px; /* Riduci la dimensione del testo per dispositivi mobili, se necessario */
+                }
+                
+                #calendarTable thead th {
+                    text-align: center; /* Centra l'intestazione */
+                }
+
+                #calendarTable tbody td {
+                    text-align: center; /* Centra il contenuto delle celle */
+                }
+            }
+
+            .header {
+                background-color: #333;
+                color: #fff;
+                padding: 10px;
+            }
+
+            .header button {
+                background-color: transparent;
+                border: none;
+                color: #fff;
+                cursor: pointer;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            th, td {
+                padding: 10px;
+                border: 1px solid #ccc;
+            }
+
+            th {
+                background-color: #333;
+                color: #fff;
+            }
+            /* Aggiungi stili CSS per la classe "has-data" */
+            .has-data {
+                position: relative; /* Per posizionare l'indicatore all'interno della cella */
+            }
+
+            .has-data::before {
+                content: "•"; /* Contenuto del pallino o indicatore */
+                position: absolute; /* Posiziona l'indicatore all'interno della cella */
+                top: 5px; /* Regola la posizione verticale dell'indicatore */
+                right: 5px; /* Regola la posizione orizzontale dell'indicatore */
+                color: red; /* Colore dell'indicatore */
+            }
+        </style>
+    </head>
+    <body>
+        <div class="calendar">
+            <div class="header row mb-4">
+                <button id="prevMonth" class = "col-4">←</button>
+                <h2 id="currentMonthYear" class = "col-4"></h2>
+                <button id="nextMonth" class = "col-4">→</button>
+            </div>
+            <div class="table-responsive">
+                <table id="calendarTable" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Lunedì</th>
+                            <th>Martedì</th>
+                            <th>Mercoledì</th>
+                            <th>Giovedì</th>
+                            <th>Venerdì</th>
+                            <th>Sabato</th>
+                            <th>Domenica</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="card" class="card mt-4" style="display: none;">
+                <!-- Contenuto della tua card -->
+                <h3 class="mt-2">Titolo della card</h3>
+                <p>Contenuto della card...</p>
+                <!-- Aggiungi il pulsante per chiudere la card -->
+                <button id="closeCard" class="btn btn-primary mb-2">Chiudi</button>
+            </div>
+        </div>
+
+        <script>
+
+            async function buildCalendar(month, year) {
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startingDay = (firstDay.getDay() + 6) % 7;
+                const calendarTable = document.getElementById("calendarTable");
+                const calendarBody = calendarTable.getElementsByTagName("tbody")[0];
+                calendarBody.innerHTML = "";
+                const lessonsData = await getLessonsData(year, month, daysInMonth);
+                let lessonsDays = [];
+                for(let i=1;i<32;i++){
+                    if(lessonsData[i]!=undefined){
+                        lessonsDays.push(i);
+                    }
+                }
+                const currentMonthYear = document.getElementById("currentMonthYear");
+                currentMonthYear.textContent = `${new Intl.DateTimeFormat("it-IT", { month: "long" }).format(firstDay)} ${year}`;
+                let day = 1;
+                //console.log(lessonsData.keys());
+                for (let i = 0; i < 6; i++) {
+                    const row = document.createElement("tr");
+
+                    for (let j = 0; j < 7; j++) {
+                        if (i === 0 && j < startingDay) {
+                            const cell = document.createElement("td");
+                            row.appendChild(cell);
+                        } else if (day <= daysInMonth) {
+                            const cell = document.createElement("td");
+                            cell.textContent = day;
+                            if (lessonsDays.includes(day)) {
+                                cell.classList.add("has-data"); // Aggiungi una classe alla cella
+                            }
+                            row.appendChild(cell);
+                            day++;
+                        }
+                    }
+
+                    calendarBody.appendChild(row);
+
+                    if (day > daysInMonth) {
+                        break;
+                    }
+                }
+            }
+
+            async function getLessonsData(year, month, daysInMonth){
+                return new Promise(async (resolve, reject) => {
+                
+                    // URL a cui effettuare la richiesta POST
+                    const url = 'https://apache.prod.up.cineca.it/api/Impegni/getImpegniCalendarioPubblico';
+                    month += 1;
+                    
+                    // Dati da inviare nel corpo della richiesta
+                    const data = {
+                        "clienteId": "5852fd1ab7305612a8354d51",
+                        "dataFine": year + "-" + month + "-" + daysInMonth,
+                        "dataInizio": year + "-" + month + "-1",
+                        "linkCalendarioId": "613bd49941164e0018f0f1d7",
+                        "mostraImpegniAnnullati": true,
+                        "mostraIndisponibilitaTotali": false,
+                        "pianificazioneTemplate": false
+                    };
+
+                    // Impostazioni per la richiesta HTTP
+                    const requestOptions = {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json', // Tipo di contenuto JSON
+                        },
+                        body: JSON.stringify(data), // Converte i dati in formato JSON
+                    };
+
+                    try{
+                        // Effettua la richiesta
+                        const response = await fetch(url, requestOptions)
+                        const data = await response.json();
+                        var map = new Map();
+                            data.forEach(element => {
+                                // Crea un oggetto Data dalla stringa
+                                const date = new Date(element["dataInizio"]).getDate();
+                                if(date in map){
+                                    map[date].push({
+                                        name : element["nome"],
+                                        startTime : getLessonsTime(element["dataInizio"]),
+                                        endTime: getLessonsTime(element["dataFine"]),
+                                        //room: element["risorse"][1]["aula"]["descrizione"],
+                                        //floor: element["risorse"][1]["aula"]["piano"]["descrizione"]
+                                    });
+                                } else{
+                                    map[date] = [{
+                                        name : element["nome"],
+                                        startTime : getLessonsTime(element["dataInizio"]),
+                                        endTime: getLessonsTime(element["dataFine"]),
+                                        //room: element["risorse"][1]["aula"]["descrizione"],
+                                        //floor: element["risorse"][1]["aula"]["piano"]["descrizione"]
+                                    }];
+                                }
+                            });
+                            resolve(map);
+                    }catch(error){
+                            // Gestisci gli errori qui
+                            console.error('Errore:', error);
+                            reject(error);
+                    }
+                })
+            }
+
+            function getLessonsTime(dateString){
+                const date = new Date(dateString);
+                const options = {
+                    timeZone: 'Europe/Rome', // Imposta il fuso orario italiano
+                    hour12: false, // Usa il formato a 24 ore
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric',
+                };
+                return new Intl.DateTimeFormat('it-IT', options).format(date);
+            }
+
+            const currentDate = new Date();
+            let currentMonth = currentDate.getMonth();
+            let currentYear = currentDate.getFullYear();
+
+            buildCalendar(currentMonth, currentYear);
+
+            document.getElementById("prevMonth").addEventListener("click", () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                buildCalendar(currentMonth, currentYear);
+            });
+
+            document.getElementById("nextMonth").addEventListener("click", () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                buildCalendar(currentMonth, currentYear);
+            });
+
+            const calendarBody = document.getElementById("calendarTable").getElementsByTagName("tbody")[0];
+            const card = document.getElementById("card");
+            const closeCardButton = document.getElementById("closeCard");
+
+            calendarBody.addEventListener("click", (e) => {
+                const clickedCell = e.target;
+
+                if (clickedCell.tagName === "TD" && clickedCell.textContent !== "") {
+                    // Visualizza la card quando si fa clic su una cella
+                    card.style.display = "block";
+
+                    // Puoi personalizzare il contenuto della card qui
+                    // Ad esempio:
+                    card.querySelector("h3").textContent = "Orario del giorno " + clickedCell.textContent;
+                    card.querySelector("p").innerHTML = "\
+                        <h1>Aggiungere i dati delle lezioni relativi a questo giorno</h1>\
+                    ";
+                }
+            });
+
+            // Aggiungi un gestore di eventi per chiudere la card quando si fa clic sul pulsante "Chiudi"
+            closeCardButton.addEventListener("click", () => {
+                card.style.display = "none";
+            });
+        </script>
+    </body>
+</html>
