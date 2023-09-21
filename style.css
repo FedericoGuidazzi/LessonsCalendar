@@ -1,0 +1,114 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.calendar {
+    width: 90%; /* Utilizza percentuali per la larghezza */
+    margin: 0 auto;
+    text-align: center;
+    padding: 10px;
+}
+
+/* Stili per schermi più piccoli */
+@media (max-width: 768px) {
+    .calendar {
+        width: 100%; /* Riduci la larghezza per schermi più piccoli */
+    }
+}
+
+/* Stili per schermi ancora più piccoli (ad esempio, dispositivi mobili) */
+@media (max-width: 480px) {
+    .calendar {
+        width: 100%; /* Larghezza al 100% per schermi molto piccoli */
+    }
+}
+/* Stile per la tabella per dispositivi mobili */
+@media (max-width: 767px) {
+    #calendarTable {
+        width: 100%; /* Imposta la larghezza al 100% per adattarsi allo schermo */
+        font-size: 12px; /* Riduci la dimensione del testo per dispositivi mobili, se necessario */
+    }
+    
+    #calendarTable thead th {
+        text-align: center; /* Centra l'intestazione */
+    }
+
+    #calendarTable tbody td {
+        text-align: center; /* Centra il contenuto delle celle */
+    }
+}
+
+.header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+}
+
+.header button {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+th {
+    background-color: #333;
+    color: #fff;
+}
+/* Aggiungi stili CSS per la classe "has-data" */
+.has-data {
+    position: relative; /* Per posizionare l'indicatore all'interno della cella */
+}
+
+.has-data::before {
+    content: "•"; /* Contenuto del pallino o indicatore */
+    position: absolute; /* Posiziona l'indicatore all'interno della cella */
+    top: 5px; /* Regola la posizione verticale dell'indicatore */
+    right: 5px; /* Regola la posizione orizzontale dell'indicatore */
+    color: red; /* Colore dell'indicatore */
+}
+
+.multiselect {
+width: 200px;
+}
+
+.selectBox {
+position: relative;
+}
+
+.selectBox select {
+width: 100%;
+font-weight: bold;
+}
+
+.overSelect {
+position: absolute;
+left: 0;
+right: 0;
+top: 0;
+bottom: 0;
+}
+
+#checkboxes {
+display: none;
+border: 1px #dadada solid;
+}
+
+#checkboxes label {
+display: block;}
+
+#checkboxes label:hover {
+background-color: #1e90ff;
+}
